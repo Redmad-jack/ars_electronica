@@ -78,3 +78,12 @@
 .exhibition-panel footer { border-top: 1px solid #25373c; padding-top: 15px; margin-top: 20px; font-size: 9px; color: #6b858d; }
 #save-preset { margin-top: 16px; width: 100%; }
 #save-status { display: block; margin-top: 10px; font-size: 10px; line-height: 1.6; color: #8db8af; }
+.exhibition #app.comparison-active { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.exhibition .comparison-active #visual-stage { width: min(50vw, 100vh); height: min(50vw, 100vh); }
+#reference-pane { position: relative; width: 100%; height: 100%; min-width: 0; overflow: hidden; background: #000; }
+#reference-pane[hidden] { display: none; }
+#reference-video { display: block; width: 100%; height: 100%; object-fit: contain; }
+.reference-caption { position: absolute; bottom: 2.4%; left: 5%; color: #6b858d; font-size: 10px; letter-spacing: 0.15em; pointer-events: none; }
+.comparison-controls > button { width: 100%; margin-bottom: 8px; }
+.comparison-controls button[hidden], .comparison-controls input[hidden] { display: none; }
+#comparison-status { display: block; font-size: 10px; color: #8db8af; line-height: 1.6; margin-top: 10px; }

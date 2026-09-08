@@ -5,11 +5,16 @@ import { settingsFromUrl, type ExhibitionSettings } from "./config";
 import { ExhibitionWorld } from "./world";
 import { ExhibitionRenderer } from "./renderer";
 import { specimenMotion } from "./scenarios";
+import { VideoComparison } from "./comparison";
 
 const settings = settingsFromUrl(new URLSearchParams(location.search));
 const app = document.getElementById("app")!;
 document.body.classList.add("exhibition");
 app.innerHTML = `
+  <section id="reference-pane" hidden aria-label="Local reference video">
+    <video id="reference-video" playsinline preload="none" aria-label="本地参考视频"></video>
+    <div class="reference-caption">本地视频 / LOCAL VIDEO</div>
+  </section>
   <div id="visual-stage">
     <canvas id="visual-canvas" aria-label="Generative aquatic installation"></canvas>
     <div class="exhibition-caption"><span>CO—BREATHING</span><span>程序生成 / GENERATIVE SIMULATION</span></div>
@@ -20,6 +25,12 @@ app.innerHTML = `
     <nav><a href="?view=exhibition">展览</a><a href="?view=exhibition&scene=specimen">单鱼</a><a href="?view=exhibition&scene=flow">水流测试</a><a href="/">调试</a></nav>
     <div class="exhibition-status"><output id="exhibition-fps">— fps</output><span id="exhibition-clock">00:00</span><span>本地程序生成</span></div>
     <div class="exhibition-actions"><button id="exhibition-pause">暂停</button><button id="exhibition-reset">重置 R</button><button id="exhibition-fullscreen">全屏 F</button></div>
+    <section class="comparison-controls"><h2>视频与模拟 · 左右分屏</h2>
+      <button id="comparison-play">▶ 同步播放视频 + 模拟</button>
+      <div class="exhibition-actions"><button id="comparison-choose">选择视频</button><button id="comparison-stop" hidden>退出分屏</button></div>
+      <input id="comparison-file" type="file" accept="video/*,.mov,.mp4,.webm" hidden>
+      <output id="comparison-status" role="status">使用本机配置的视频，或选择文件；不会上传视频。</output>
+    </section>
     <section><h2>场景</h2><div id="scene-settings"></div></section>
     <section><h2>光与色</h2><div id="color-settings"></div></section>
     <section><h2>输出</h2><div id="output-settings"></div><button id="save-preset">保存展示参数</button><output id="save-status"></output></section>
@@ -104,14 +115,38 @@ const diagnostics: ExhibitionDiagnostics = {
 };
 window.__EXHIBITION__ = diagnostics;
 
-function reset(): void {
+function resetWorld(): void {
   world.reset(); renderer.reset(); accumulator = 0; pendingSamples.length = 0; lastTime = performance.now();
   controls.forEach(c => c.refresh());
 }
-function togglePause(): void {
-  paused = !paused; accumulator = 0; lastTime = performance.now();
+function reset(): void {
+  if (comparison.active) { void comparison.start(true, !paused); } else resetWorld();
+}
+function setPaused(value: boolean): void {
+  paused = value; accumulator = 0; pendingSamples.length = 0; lastTime = performance.now();
   document.getElementById("exhibition-pause")!.textContent = paused ? "继续" : "暂停";
 }
+function togglePause(): void {
+  if (comparison.active) { if (paused) comparison.resume(); else comparison.pause(); }
+  else setPaused(!paused);
+}
+const comparison = new VideoComparison(
+  document.getElementById("reference-video") as HTMLVideoElement,
+  document.getElementById("comparison-play") as HTMLButtonElement,
+  document.getElementById("comparison-status") as HTMLOutputElement,
+  { pause: setPaused, reset: resetWorld, layout: active => {
+    app.classList.toggle("comparison-active", active);
+    section("reference-pane").hidden = !active; section("comparison-stop").hidden = !active;
+    resize();
+  } },
+);
+section("comparison-play").addEventListener("click", () => { void comparison.start(); });
+section("comparison-stop").addEventListener("click", () => comparison.stop());
+const videoFile = section("comparison-file") as HTMLInputElement;
+section("comparison-choose").addEventListener("click", () => videoFile.click());
+videoFile.addEventListener("change", () => {
+  const file = videoFile.files?.[0]; if (file) comparison.choose(file); videoFile.value = "";
+});
 async function fullscreen(): Promise<void> {
   try { if (document.fullscreenElement) await document.exitFullscreen(); else await app.requestFullscreen(); }
   catch { document.getElementById("save-status")!.textContent = "浏览器未允许全屏，请使用窗口全屏。"; }
@@ -181,9 +216,12 @@ const keyDown = (event: KeyboardEvent): void => {
 document.addEventListener("keydown", keyDown);
 const resize = (): void => renderer.resize(Math.max(stage.clientWidth, 1));
 window.addEventListener("resize", resize);
-const visibility = (): void => { lastTime = performance.now(); accumulator = 0; };
+const visibility = (): void => {
+  lastTime = performance.now(); accumulator = 0;
+  if (document.hidden && comparison.active) comparison.pause();
+};
 document.addEventListener("visibilitychange", visibility);
-canvas.addEventListener("webglcontextlost", event => { event.preventDefault(); contextLost = true; paused = true; panel.hidden = false; section("save-status").textContent = "图形上下文已中断，恢复后会重新初始化画面。"; });
+canvas.addEventListener("webglcontextlost", event => { event.preventDefault(); contextLost = true; setPaused(true); if (comparison.active) comparison.pause(); panel.hidden = false; section("save-status").textContent = "图形上下文已中断，恢复后会重新初始化画面。"; });
 canvas.addEventListener("webglcontextrestored", () => { location.reload(); });
 
 function frame(now: number): void {
@@ -197,7 +235,9 @@ function frame(now: number): void {
   if (!paused) {
     if (settings.mouse) pendingSamples.push(...samples);
     if (pendingSamples.length > 64) pendingSamples.splice(0, pendingSamples.length - 64);
-    accumulator = Math.min(accumulator + Math.max(0, rawDt), 5 / 60);
+    // Buffering cannot move the simulation ahead: video time is the shared transport clock.
+    accumulator = comparison.active ? Math.min(Math.max(0, comparison.video.currentTime - world.time), 5 / 60) :
+      Math.min(accumulator + Math.max(0, rawDt), 5 / 60);
     let firstStep = true;
     while (accumulator >= 1 / 60) {
       const stepSamples = firstStep ? pendingSamples.splice(0) : [];
@@ -224,7 +264,7 @@ function frame(now: number): void {
   frameId = requestAnimationFrame(frame);
 }
 function dispose(): void {
-  cancelAnimationFrame(frameId); mouse.dispose(); renderer.dispose();
+  cancelAnimationFrame(frameId); comparison.dispose(); mouse.dispose(); renderer.dispose();
   document.removeEventListener("keydown", keyDown); document.removeEventListener("visibilitychange", visibility);
   window.removeEventListener("resize", resize);
 }

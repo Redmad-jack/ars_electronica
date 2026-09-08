@@ -14,7 +14,7 @@ const root = path.join(staging, "Co-Breathing-Visual");
 const archive = path.join(output, `co-breathing-visual-mac-mini-${stamp}.zip`);
 const files = [];
 const sha256 = data => createHash("sha256").update(data).digest("hex");
-const skip = name => name === ".DS_Store" || name.startsWith("._") || name.startsWith(".env") ||
+const skip = name => name === ".DS_Store" || name.startsWith("._") || (name.startsWith(".env") && name !== ".env.example") ||
   /\.(pem|key|p12|tsbuildinfo)$/.test(name) || [".git", "node_modules", "test-results", "playwright-report"].includes(name);
 
 async function collect(relative) {
@@ -35,7 +35,7 @@ async function collect(relative) {
 
 try {
   // Explicit roots capture uncommitted visual work without unrelated hardware data or credentials.
-  const visualEntries = ["src", "tests", "e2e", "scripts", "dist", "README.md", ".gitignore", ".nvmrc",
+  const visualEntries = ["src", "tests", "e2e", "scripts", "dist", "README.md", ".gitignore", ".nvmrc", ".env.example",
     "package.json", "package-lock.json", "index.html", "tsconfig.json", "vite.config.ts", "playwright.config.ts"];
   for (const entry of visualEntries) await collect(`co_breathing_visual/${entry}`);
   for (const entry of ["AGENTS.md", ".gitignore", ".codex/skills/karpathy-guidelines/SKILL.md"]) await collect(entry);
