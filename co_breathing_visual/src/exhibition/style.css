@@ -1,0 +1,80 @@
+.exhibition,
+.exhibition #app {
+  background: #000;
+}
+.exhibition #app:fullscreen {
+  width: 100vw;
+  height: 100vh;
+}
+.exhibition #visual-stage {
+  outline: none;
+  background: #000;
+}
+.exhibition #visual-canvas {
+  cursor: none;
+}
+.exhibition-caption {
+  position: absolute;
+  left: 3.5%;
+  right: 3.5%;
+  bottom: 2.4%;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  font-size: clamp(8px, 0.76vw, 11px);
+  font-weight: 400;
+  letter-spacing: 0.17em;
+  color: #556769;
+}
+.exhibition-caption span:last-child {
+  font-size: 0.85em;
+  letter-spacing: 0.1em;
+}
+#specimen-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 3.5%;
+  text-align: center;
+  color: #798a92;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  pointer-events: none;
+}
+.exhibition-panel {
+  position: fixed;
+  z-index: 20;
+  right: 18px;
+  top: 18px;
+  width: min(326px, calc(100vw - 36px));
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+  background: rgba(9, 15, 20, 0.96);
+  border: 1px solid #26373c;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 16px 60px #000b;
+  color: #b9d2d5;
+  backdrop-filter: blur(16px);
+}
+.exhibition-panel[hidden] { display: none; }
+.exhibition-panel header { display: flex; align-items: center; justify-content: space-between; }
+.exhibition-panel header button { font-size: 24px; border: 0; background: none; }
+.exhibition-eyebrow { font-size: 9px; color: #66858b; letter-spacing: 0.13em; margin: 0 0 8px; }
+.exhibition-panel h1 { font-size: 19px; font-weight: 450; }
+.exhibition-panel nav { display: flex; gap: 16px; margin-top: 20px; font-size: 11px; }
+.exhibition-panel a { color: #91c8c8; text-decoration: none; }
+.exhibition-panel a:hover { color: #e2ffff; }
+.exhibition-status { display: flex; gap: 14px; margin: 18px 0; font-size: 10px; color: #718d96; font-variant-numeric: tabular-nums; }
+.exhibition-status output { color: #8fbfaa; }
+.exhibition-actions { display: flex; gap: 8px; }
+.exhibition-actions button { flex: 1; }
+.exhibition-panel label { margin-top: 12px; font-size: 11px; color: #a7c0c6; }
+.exhibition-panel select { grid-column: 1 / -1; width: 100%; border: 1px solid #2c4048; border-radius: 4px; background: #101d23; color: #d1e3e5; padding: 8px; margin-top: 4px; font: inherit; }
+.exhibition-panel input[type=range] { accent-color: #79b6ba; }
+.exhibition-check { display: flex; align-items: center; gap: 8px; }
+.exhibition-check input { accent-color: #79b6ba; }
+.exhibition-panel h2 { letter-spacing: 0.08em; color: #698c94; font-size: 10px; }
+.exhibition-panel footer { border-top: 1px solid #25373c; padding-top: 15px; margin-top: 20px; font-size: 9px; color: #6b858d; }
+#save-preset { margin-top: 16px; width: 100%; }
+#save-status { display: block; margin-top: 10px; font-size: 10px; line-height: 1.6; color: #8db8af; }

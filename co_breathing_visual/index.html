@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#03080a" />
+    <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" />
+    <title>Co-Breathing Visual</title>
+  </head>
+  <body>
+    <main id="app" aria-label="Co-Breathing fish simulation">
+      <div id="visual-stage">
+        <canvas id="visual-canvas"></canvas>
+        <canvas id="debug-overlay"></canvas>
+      </div>
+
+      <button id="controls-toggle" class="controls-toggle" type="button" aria-controls="debug-panel" aria-expanded="false">
+        Controls (D)
+      </button>
+
+      <aside id="debug-panel" class="debug-panel is-hidden" aria-label="Simulation controls">
+        <header class="panel-header">
+          <div>
+            <p class="eyebrow">Co-Breathing</p>
+            <h1>Simulation</h1>
+          </div>
+          <output id="fps-output">-- fps</output>
+        </header>
+
+        <div class="command-row">
+          <button id="pause-button" type="button">Pause</button>
+          <button id="reset-button" type="button">Reset</button>
+          <button id="fullscreen-button" type="button">Fullscreen</button>
+        </div>
+
+        <section>
+          <h2>Output preview</h2>
+          <div class="output-grid" aria-label="Installation output preview">
+            <span>Left pump →</span><output id="pump-left-output">0%</output>
+            <span>Right pump ←</span><output id="pump-right-output">0%</output>
+            <span>Top pump ↓</span><output id="pump-top-output">0%</output>
+            <span>Bottom pump ↑</span><output id="pump-bottom-output">0%</output>
+            <span>Fish activity</span><output id="activity-output">0.00</output>
+            <span>Coherence</span><output id="coherence-output">0.00</output>
+            <span>Mapping</span><output id="mapping-mode-output">idle</output>
+            <span>Atomizer</span><output id="atomizer-output">READY · PREVIEW ONLY</output>
+          </div>
+        </section>
+
+        <section>
+          <h2>Hardware output</h2>
+          <div class="hardware-status-row">
+            <span id="hardware-state-dot" class="status-dot" aria-hidden="true"></span>
+            <output id="hardware-state-output">BRIDGE OFFLINE</output>
+          </div>
+          <div class="output-grid" aria-label="Physical hardware status">
+            <span>Serial</span><output id="serial-output">NOT CONNECTED</output>
+            <span>Sent left / CH1</span><output id="sent-left-output">0%</output>
+            <span>Sent right / CH2</span><output id="sent-right-output">0%</output>
+            <span>Sent top / CH3</span><output id="sent-top-output">0%</output>
+            <span>Sent bottom / CH4</span><output id="sent-bottom-output">0%</output>
+            <span>Last ACK</span><output id="hardware-ack-output">--</output>
+            <span>Atomizer / GPIO8</span><output id="hardware-atomizer-output">LOCKED</output>
+          </div>
+          <p id="hardware-warning" class="hardware-warning">
+            Electrical interlock is not verified. Arm remains locked.
+          </p>
+          <div class="command-row hardware-command-row">
+            <button id="hardware-connect-button" type="button">Connect</button>
+            <button id="hardware-arm-button" type="button" disabled>Arm hardware</button>
+            <button id="hardware-off-button" class="danger-button" type="button">ALL OFF</button>
+          </div>
+        </section>
+
+        <section>
+          <h2>Audience input</h2>
+          <div class="hardware-status-row">
+            <span id="audience-state-dot" class="status-dot" aria-hidden="true"></span>
+            <output id="audience-state-output">PROCEDURAL FALLBACK</output>
+          </div>
+          <div class="output-grid" aria-label="Audience camera status">
+            <span>Published tracks</span><output id="audience-tracks-output">0</output>
+            <span>Observed people</span><output id="audience-observed-output">0</output>
+            <span>Camera frame age</span><output id="audience-frame-age-output">--</output>
+            <span>Track state age</span><output id="audience-state-age-output">--</output>
+            <span>Capacity</span><output id="audience-capacity-output">OK</output>
+          </div>
+          <p id="audience-warning" class="hardware-warning">
+            Vision bridge offline. Procedural crowd is active.
+          </p>
+          <div class="command-row hardware-command-row">
+            <button id="audience-reconnect-button" type="button">Reconnect camera</button>
+          </div>
+        </section>
+
+        <section>
+          <h2>Interaction</h2>
+          <div class="segment-control" role="group" aria-label="Interaction mode">
+            <button type="button" data-mode="obstacle">Obstacle</button>
+            <button type="button" data-mode="flow">Flow</button>
+            <button type="button" data-mode="both" class="is-active">Both</button>
+          </div>
+          <label class="checkbox-row">
+            <input id="mouse-toggle" type="checkbox" />
+            <span>Enable mouse interaction</span>
+          </label>
+          <label>Obstacle radius <output data-output="obstacleRadius"></output>
+            <input data-setting="obstacleRadius" type="range" min="0.04" max="0.22" step="0.005" />
+          </label>
+          <label>Obstacle force <output data-output="obstacleWeight"></output>
+            <input data-setting="obstacleWeight" type="range" min="0" max="4" step="0.05" />
+          </label>
+          <label>Flow force <output data-output="flowWeight"></output>
+            <input data-setting="flowWeight" type="range" min="0" max="4" step="0.05" />
+          </label>
+        </section>
+
+        <section>
+          <h2>Crowd</h2>
+          <label>Maximum people <output data-output="crowdCount"></output>
+            <input data-setting="crowdCount" type="range" min="0" max="3" step="1" />
+          </label>
+          <label>Walking speed <output data-output="crowdSpeed"></output>
+            <input data-setting="crowdSpeed" type="range" min="0" max="0.12" step="0.005" />
+          </label>
+          <label>Personal space <output data-output="crowdRadius"></output>
+            <input data-setting="crowdRadius" type="range" min="0.035" max="0.14" step="0.005" />
+          </label>
+        </section>
+
+        <section>
+          <h2>Flock</h2>
+          <label>Fish <output data-output="fishCount"></output>
+            <input data-setting="fishCount" type="range" min="3" max="5" step="1" />
+          </label>
+          <label>Separation <output data-output="separationWeight"></output>
+            <input data-setting="separationWeight" type="range" min="0" max="4" step="0.05" />
+          </label>
+          <label>Alignment <output data-output="alignmentWeight"></output>
+            <input data-setting="alignmentWeight" type="range" min="0" max="3" step="0.05" />
+          </label>
+          <label>Cohesion <output data-output="cohesionWeight"></output>
+            <input data-setting="cohesionWeight" type="range" min="0" max="3" step="0.05" />
+          </label>
+          <label>Wander <output data-output="wanderWeight"></output>
+            <input data-setting="wanderWeight" type="range" min="0" max="2" step="0.05" />
+          </label>
+          <label>Body wave <output data-output="bodyWaveAmplitude"></output>
+            <input data-setting="bodyWaveAmplitude" type="range" min="0.05" max="0.7" step="0.01" />
+          </label>
+          <label>Body stiffness <output data-output="bodyStiffness"></output>
+            <input data-setting="bodyStiffness" type="range" min="0.05" max="0.4" step="0.01" />
+          </label>
+          <label>Seed <output data-output="seed"></output>
+            <input data-setting="seed" type="number" min="1" max="2147483647" step="1" />
+          </label>
+        </section>
+
+        <section>
+          <h2>Water</h2>
+          <label>Injection <output data-output="flowInjection"></output>
+            <input data-setting="flowInjection" type="range" min="0" max="3" step="0.05" />
+          </label>
+          <label>Decay <output data-output="flowDecay"></output>
+            <input data-setting="flowDecay" type="range" min="0.1" max="4" step="0.05" />
+          </label>
+          <label class="checkbox-row">
+            <input id="field-toggle" type="checkbox" />
+            <span>Field overlay</span>
+          </label>
+        </section>
+      </aside>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

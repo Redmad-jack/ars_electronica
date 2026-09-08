@@ -1,0 +1,45 @@
+# macOS metadata
+.DS_Store
+._*
+
+# Python generated files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+*.tmp_pypdf/
+*_pypdf_tmp/
+
+# JavaScript generated files
+node_modules/
+dist/
+test-results/
+playwright-report/
+*.tsbuildinfo
+
+# Device firmware generated files and local network credentials
+/firmware/**/.pio/
+/firmware/**/include/local_config.h
+
+# Local document-generation scratch space
+/.codex_tmp/
+
+# Historical/generated project material kept locally, not in the code baseline
+/assets/
+/相关材料/
+/maps_network/**
+!/maps_network/README.md
+/outputs/**
+!/outputs/README.md
+
+# Model weights and downloaded installers
+/co_breathing/models/
+*.pt
+*.onnx
+*.hef
+*.mov
+*.exe
+*.rar
+*.zip
+*.downloading
